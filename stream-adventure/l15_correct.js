@@ -1,5 +1,5 @@
 /**
- * This is actually a wrong solution. But due to a bug in the stream-adventure CRYPT, it expects weird output so i had to make it work
+ * When stream-adventure gets an update, we might be able to verify this one. Which is the one that actually makes sense
  * @type {exports}
  */
 var crypto = require('crypto');
@@ -8,23 +8,13 @@ var tar    = require('tar');
 var through = require('through');
 
 var parser = tar.Parse();
-var md5s = "";
-var files = "";
-var already_sent = false;
 
 parser.on('entry', function (e) {
     if (e && e.type == 'File') {
         e
             .pipe(crypto.createHash('md5', { encoding: 'hex' }))
             .pipe(through(function write(md5data) {
-                md5s += md5data.toString();
-                files += " " + e.path + "\n";
-            }, function end () {
-                if (!already_sent) {
-                    this.queue(md5s + files);
-                    already_sent = true;
-                }
-                    
+                this.queue(md5data.toString() + ' '+ e.path + "\n");
             }))
             .pipe(process.stdout);
     }
